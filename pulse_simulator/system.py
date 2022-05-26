@@ -36,8 +36,8 @@ class Qubit:
         self.S1 = np.diag([0,1]+[0]*(self.dim-2))
         if dim >= 3:
             self.S2 = np.diag([0,0,1]+[0]*(self.dim-3))
-        self.Sp = 2**(-0.5)*np.diag([+1,+1]+[0]*(self.dim-2))
-        self.Sm = 2**(-0.5)*np.diag([+1,-1]+[0]*(self.dim-2))
+        self.Sp = 0.5*np.einsum("i,j->ij", [+1,+1]+[0]*(self.dim-2), [+1,+1]+[0]*(self.dim-2))
+        self.Sm = 0.5*np.einsum("i,j->ij", [+1,-1]+[0]*(self.dim-2), [+1,-1]+[0]*(self.dim-2))
         self.Sc = 0.5*(self.S0 + self.S1)
 
     def __repr__(self):
@@ -158,8 +158,13 @@ class System:
             raise ValueError(f'Qubit {qubit} is not found.')
         self.drives[idx] = Drive(idx, self.qubits[qubit], amplitude, frequency)
 
-    def compile(self, frame_frequency):
+    def compile(self, frame_frequency=None):
+        if frame_frequency is None:
+            frame_frequency = np.mean([q.frequency for q in self.qubits.values()])
+        self.frame_frequency = frame_frequency
+        
         self.dims = [q.dim for q in self.qubits.values()]
+        self.dim = np.prod(self.dims)
         
         self.static_hamiltonian = 0
         for idx, q in self.qubits.items():
@@ -182,3 +187,21 @@ class System:
             operator_imag = tp.get_operator()
             self.dynamic_operators[idx] = (operator_real, operator_imag)
             self.dynamic_detunings[idx] = d.frequency - frame_frequency
+            
+        self.qubit_freqs = {}
+        for idx, q in self.qubits.items():
+            self.qubit_freqs[idx] = q.frequency
+        for idxs, c in self.coupls.items():
+            w0 = self.qubits[idxs[0]].frequency
+            w1 = self.qubits[idxs[1]].frequency
+            a0 = self.qubits[idxs[0]].anharmonicity
+            a1 = self.qubits[idxs[1]].anharmonicity
+            g01 = c.coupling
+            self.qubit_freqs[idxs[0]] += g01**2/(w0-w1) + g01**2*(a0+a1)/(((w0+a0)-w1)*(w0-(w1+a1)))
+            self.qubit_freqs[idxs[1]] += g01**2/(w1-w0) + g01**2*(a0+a1)/(((w0+a0)-w1)*(w0-(w1+a1)))
+            
+        self.frame_difference = 0
+        for idx, q in self.qubits.items():
+            tp = TensorProduct(*self.dims)
+            tp.prod(0.5*(self.qubit_freqs[idx]-frame_frequency)*q.Z, idx)
+            self.frame_difference += tp.get_operator()
