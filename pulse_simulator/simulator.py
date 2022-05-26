@@ -38,20 +38,33 @@ class Simulator:
                 for waveform, operator in zip(waveforms, operators):
                     tmp += waveform[i]*operator
             return tmp
-
+        
+        def compare_waveform(i,j):
+            for key in self.operators.keys():
+                waveforms = self.waveforms[key]
+                for waveform in waveforms:
+                    if waveform[i] != waveform[j]:
+                        return False
+            return True
+        
         def precompile(time, ith_hamiltonian):
             h0 = ith_hamiltonian(0)
-            t_list = [time[0]]
+            i_list = [0]
             s_list = []
             h_list = []
             for i in range(1,time.size):
-                h1 = ith_hamiltonian(i)
-                if (return_all) or (not np.allclose(h0,h1)) or (i==time.size-1):
-                    t_list.append(time[i])
-                    s_list.append(t_list[-1] - t_list[-2])
+                flag_wave = compare_waveform(i, i_list[-1])
+                if return_all or (not flag_wave) or (i==time.size-1):
+                    h1 = ith_hamiltonian(i)
+                    if i - i_list[-1] >= 2:
+                        i_list.append(i-1)
+                        s_list.append(time[i-1] - time[i_list[-2]])
+                        h_list.append(h0)
+                    i_list.append(i)
+                    s_list.append(time[i] - time[i-1])
                     h_list.append(0.5*(h0+h1))
                     h0 = h1
-            return t_list, s_list, h_list
+            return i_list, s_list, h_list
 
         def time_evolution(s_list, h_list, frame):
             u = np.identity(self.dim)
