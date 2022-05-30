@@ -4,7 +4,17 @@ from .util.transform import qubitize
 from .util.tensor_product import TensorProduct
 
 class Qubit:
+    """Class for standard harmonic oscillator"""
+    
     def __init__(self, idx, dim, frequency, anharmonicity=None):
+        """initialize the parameters of the system
+        Args:
+            idx (int) : index of the system
+            dim (int) : dimension of the system
+            frequency (float) : eigenfrequency of the system
+            anharmonicity (float) : anharmonicity of the system
+        """
+        
         if dim < 2:
             raise ValueError(f'Qubit dimension must be set >= 2')
         if dim >= 3:
@@ -29,7 +39,8 @@ class Qubit:
         self.Qi = qubitize(self.I)
         self.Qx = qubitize(self.X)
         self.Qy = qubitize(self.Y)
-        self.Qz = qubitize(self.Z)
+#         self.Qz = qubitize(self.Z)
+        self.Qz = qubitize(self.I) - qubitize(self.Z)
         self.Ql = self.I - self.Qi
 
         self.S0 = np.diag([1,0]+[0]*(self.dim-2))
@@ -53,11 +64,26 @@ class Qubit:
         return self.__repr__()
         
     def hamiltonian(self, frame_frequency):
+        """return the hamiltonian on the rotating frame
+        Args:
+            frame_frequency (float) : rotation frequency of the system simulating the time evolution
+        Returns:
+            H (np.array) : hamiltonian of the system on the rotating frame
+        """
+        
         H = 0.5*(self.frequency-frame_frequency)*self.Z + 0.5*self.anharmonicity*self.A
         return H
     
 class Coupling:
+    """Class for exchange interaction"""
+    
     def __init__(self, coupling, qubits):
+        """initialize the parameters of the system
+        Args:
+            coupling (float) : coupling strength
+            qubits (tuple) : tuple of the index of the qubit to be coupled such as (0,1)
+        """
+        
         if len(qubits) != 2:
             raise ValueError(f'Only 2-Qubits can be selected.')
         self.qubits = qubits
@@ -81,10 +107,24 @@ class Coupling:
         return self.__repr__()
     
     def hamiltonian(self):
+        """return the hamiltonian on the rotating frame
+        Returns:
+            H (np.array) : hamiltonian of the system on the rotating frame
+        """
         return self.H
 
 class Drive:
+    """Class for microwave irradiation"""
+    
     def __init__(self, idx, qubit, amplitude, frequency):
+        """initialize the parameters of the system
+        Args:
+            idx (int) : index of the microwave drive (corresponding to the Port index in the sequence_parser)
+            qubit (int) : index of the target qubit to be irraddiated
+            amplitude (float) : microwave drive amplitude
+            frequency (float) : microwave drice frequency
+        """
+        
         self.idx = idx
         self.qubit = qubit
         self.amplitude = amplitude
@@ -106,12 +146,22 @@ class Drive:
         return self.__repr__()
     
     def operator_real(self):
+        """return the hamiltonian corresponds to real part of the waveform
+        Returns:
+            self.Or (np.array) : hamiltonian corresponds to real part of the waveform
+        """
         return self.Or
     
     def operator_imag(self):
+        """return the hamiltonian corresponds to imaginary part of the waveform
+        Returns:
+            self.Oi (np.array) : hamiltonian corresponds to imaginary part of the waveform
+        """
         return self.Oi
     
 class System:
+    """Class for quantum systems containing coupled standard harmonic oscillators and microwave irradiation"""
+    
     def __init__(self):
         self.qubits = {}
         self.coupls = {}
@@ -138,11 +188,25 @@ class System:
         return self.__repr__()
         
     def add_qubit(self, idx, dim, frequency, anharmonicity=None):
+        """add a new standard harmonic oscillator
+        Args:
+            idx (idx) : index of the new qubit
+            dim (idx) : dimension of the new qubit
+            frequency (float) : eigenfrequency of the new qubit
+            anharmonicity (float) : anharmonicity of the new qubit
+        """
+        
         if idx in self.qubits.keys():
             raise ValueError(f'Qubit index {idx} is already used.')
         self.qubits[idx] = Qubit(idx, dim, frequency, anharmonicity)
         
     def add_coupling(self, idxs, coupling):
+        """add a new exchange interaction
+        Args:
+            idxs (tuple) : tuple of the index of the coupled qubits
+            coupling (float) : coupling strength
+        """
+        
         for idx in idxs:
             if idx not in self.qubits.keys():
                 raise ValueError(f'Qubit {idx} is not found.')
@@ -152,6 +216,14 @@ class System:
         self.coupls[idxs] = Coupling(coupling, qubits)
         
     def add_drive(self, idx, qubit, amplitude, frequency):
+        """add a new microwave drive
+        Args:
+            idx (int) : index of the new microwave drive
+            qubit (int) : index of the qubit to be irradiated
+            amplitude (float) : microwave drive amplitude
+            frequency (float) : microwave drive frequency
+        """
+        
         if idx in self.drives.keys():
             raise ValueError(f'Drive index {idx} is already used.')
         if qubit not in self.qubits.keys():
@@ -159,6 +231,11 @@ class System:
         self.drives[idx] = Drive(idx, self.qubits[qubit], amplitude, frequency)
 
     def compile(self, frame_frequency=None):
+        """compute the system time-evolution
+        Args:
+            frame_frequency (float) : rotation frequency of the system simulating the time evolution
+        """
+        
         if frame_frequency is None:
             frame_frequency = np.mean([q.frequency for q in self.qubits.values()])
         self.frame_frequency = frame_frequency

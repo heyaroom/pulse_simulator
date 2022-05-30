@@ -2,10 +2,17 @@ import numpy as np
 import scipy.linalg as lin
 
 class Simulator:
+    """Class for computing the time-evolution with the arbitral pulse sequence"""
+    
     def __init__(self):
         pass
         
     def set_system(self, system, frame_frequency=None):
+        """register the quantum system to be simulated
+        Args:
+            system (System) : class for the target quantum system
+            frame_frequency (float) : rotation frequency of the system simulating the time evolution
+        """
         system.compile(frame_frequency)
         self.dim = system.dim
         self.static_hamiltonian = system.static_hamiltonian
@@ -14,6 +21,11 @@ class Simulator:
         self.frame = system.frame_difference
         
     def set_sequence(self, sequence, step=0.1, visualize=False):
+        """register the pulse sequence to be simulated
+        Args:
+            sequence (Sequence) : class for the target pulse schedule (imported from sequence_parser)
+            step (float) : time step width for simulation (ns)
+        """
         for port in sequence.port_list:
             port.if_freq = self.detunings[port.name]
             port.DAC_STEP = step
@@ -29,6 +41,11 @@ class Simulator:
         self.trigger_position_list = sequence.trigger_position_list
 
     def run(self, frame_inverse=True, return_all=True):
+        """run the simulation
+        Args:
+            frame_inverse (bool) : whether to correct the simulation results to the qubit frame
+            return_all (float) : whether to return the simulation results during pulse execution
+        """
 
         def ith_hamiltonian(i):
             tmp = 0j + self.static_hamiltonian

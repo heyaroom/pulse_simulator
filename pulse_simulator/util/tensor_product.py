@@ -1,13 +1,24 @@
 import numpy as np
 
 class TensorProduct:
+    """Class for computing the product of matrices with the tensor structure"""
+    
     def __init__(self, *dims):
+        """define the dimensions of the tensor structure
+        Args:
+            dims (int) : dimensions of the tensor structure
+        """
         self.dims = np.array(dims)
         self.size = len(dims)
         self.total_dim = np.prod(self.dims)
         self.operator = np.identity(self.total_dim, dtype=np.complex128).reshape(dims*2)
 
     def prod(self, operator, target):
+        """prod the matrix with the tensor structure
+        Args:
+            operator (np.array) : matrix to multipy (must be square matrix)
+            target (int or tuple) : index on the tensor product structure on which you want to multiply the matrix
+        """
         if type(target) is int:
             target = [target]
         dims = self.dims[list(target)]
@@ -27,4 +38,9 @@ class TensorProduct:
         self.operator = np.einsum(subscripts, operator, self.operator)
 
     def get_operator(self):
-        return self.operator.reshape([self.total_dim, self.total_dim])
+        """return matrix as a numpy array
+        Returns:
+            output (np.array) : matrix
+        """
+        output = self.operator.reshape([self.total_dim, self.total_dim])
+        return output
