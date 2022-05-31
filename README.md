@@ -34,7 +34,7 @@ sys.add_drive(idx=0, qubit=0, amplitude=o0, frequency=w0)
 seq = Sequence()
 seq.add(RaisedCos(+1,dur), Port(0))
 
-sim = Simulator(frame_frequency=w0)
+sim = Simulator()
 sim.set_system(sys)
 sim.set_sequence(seq, visualize=True)
 sim.run()
