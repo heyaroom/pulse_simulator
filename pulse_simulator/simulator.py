@@ -13,12 +13,13 @@ class Simulator:
             system (System) : class for the target quantum system
             frame_frequency (float) : rotation frequency of the system simulating the time evolution
         """
-        system.compile(frame_frequency)
+        system.compile(frame_frequency)        
         self.dim = system.dim
-        self.static_hamiltonian = system.static_hamiltonian
-        self.operators = system.dynamic_operators
+        self.static_hamiltonian = system.static_hamiltonian_on_frame
+        self.operators = system.dynamic_operators_on_frame
         self.detunings = system.dynamic_detunings
-        self.frame = system.frame_difference
+        self.frame = system.frame_on_frame
+        self.comp = system.comp
         
     def set_sequence(self, sequence, step=0.1, visualize=False):
         """register the pulse sequence to be simulated
@@ -40,10 +41,9 @@ class Simulator:
         self.time = port.time
         self.trigger_position_list = sequence.trigger_position_list
 
-    def run(self, frame_inverse=True, return_all=True):
+    def run(self, return_all=True):
         """run the simulation
         Args:
-            frame_inverse (bool) : whether to correct the simulation results to the qubit frame
             return_all (float) : whether to return the simulation results during pulse execution
         """
 
@@ -90,7 +90,7 @@ class Simulator:
             unitary = [u]
             for h,s in zip(h_list, s_list):
                 u = lin.expm(-1j*h*s)@u
-                if return_all and frame_inverse:
+                if return_all:
                     f = lin.expm(+1j*frame*s)@f
                     unitary.append(f@u)
 
@@ -102,5 +102,4 @@ class Simulator:
                 return f@u
 
         t_list, s_list, h_list = precompile(2*np.pi*self.time, ith_hamiltonian)
-
         self.unitary = time_evolution(s_list, h_list, self.frame)

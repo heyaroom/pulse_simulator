@@ -2,6 +2,8 @@ import numpy as np
 import scipy.sparse as sp
 from .util.transform import qubitize
 from .util.tensor_product import TensorProduct
+from .util.frame import get_system_dressed_frame
+from .util.leakage import get_computational_basis
 
 class Qubit:
     """Class for standard harmonic oscillator"""
@@ -265,20 +267,12 @@ class System:
             self.dynamic_operators[idx] = (operator_real, operator_imag)
             self.dynamic_detunings[idx] = d.frequency - frame_frequency
             
-        self.qubit_freqs = {}
-        for idx, q in self.qubits.items():
-            self.qubit_freqs[idx] = q.frequency
-        for idxs, c in self.coupls.items():
-            w0 = self.qubits[idxs[0]].frequency
-            w1 = self.qubits[idxs[1]].frequency
-            a0 = self.qubits[idxs[0]].anharmonicity
-            a1 = self.qubits[idxs[1]].anharmonicity
-            g01 = c.coupling
-            self.qubit_freqs[idxs[0]] += g01**2/(w0-w1) + g01**2*(a0+a1)/(((w0+a0)-w1)*(w0-(w1+a1)))
-            self.qubit_freqs[idxs[1]] += g01**2/(w1-w0) + g01**2*(a0+a1)/(((w0+a0)-w1)*(w0-(w1+a1)))
-            
-        self.frame_difference = 0
-        for idx, q in self.qubits.items():
-            tp = TensorProduct(*self.dims)
-            tp.prod(0.5*(self.qubit_freqs[idx]-frame_frequency)*q.Z, idx)
-            self.frame_difference += tp.get_operator()
+        self.conv, self.frame = get_system_dressed_frame(self)
+        self.comp = get_computational_basis(self)
+        
+        # operator conversion onto the system dressed frame
+        self.static_hamiltonian_on_frame = self.conv.T.conj()@self.static_hamiltonian@self.conv
+        self.dynamic_operators_on_frame = {}
+        for key, val in self.dynamic_operators.items():
+            self.dynamic_operators_on_frame[key] = self.conv.T.conj()@val@self.conv
+        self.frame_on_frame = self.conv.T.conj()@self.frame@self.conv
