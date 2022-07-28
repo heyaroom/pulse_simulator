@@ -43,7 +43,7 @@ unitary = sim.unitary
 ```
 
 ## Citation
-'''
+```
 @Misc{PulseSimulator,
   author = {Heya, Kentaro},
   title = {{Pulse Simulator}: A pulse simulator for quantum engineering},
@@ -51,4 +51,4 @@ unitary = sim.unitary
   url = "https://github.com/heyaroom/pulse_simulator",
   note = {[Online; accessed <today>]}
 }
-'''
+```
