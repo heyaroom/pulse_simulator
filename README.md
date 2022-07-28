@@ -41,3 +41,14 @@ sim.run()
 
 unitary = sim.unitary
 ```
+
+## Citation
+'''
+@Misc{PulseSimulator,
+  author = {Heya, Kentaro},
+  title = {{Pulse Simulator}: A pulse simulator for quantum engineering},
+  year = {2021--},
+  url = "https://github.com/heyaroom/pulse_simulator",
+  note = {[Online; accessed <today>]}
+}
+'''
