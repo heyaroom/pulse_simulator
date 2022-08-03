@@ -43,7 +43,7 @@ unitary = sim.unitary
 ```
 
 ## Citation
-No obligation. Use it as needed.
+No obligation. Use the following as needed.
 ```
 @Misc{PulseSimulator,
   author = {Heya, Kentaro},
