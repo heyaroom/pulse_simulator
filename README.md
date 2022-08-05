@@ -73,12 +73,15 @@ visualize_hamiltonian_tomography(sim.time, data, sim.trigger_position_list)
 ```
 
 Visualized Pulse Sequence
+
 ![TPCX sequence](/figures/tpcx_sequence.png)
 
 Visualized Hamiltonian Tomography (Control Qubit)
+
 ![HT control](/figures/hamiltonian_tomography_control.png)
 
 Visualized Hamiltonian Tomography (Target Qubit)
+
 ![HT target](/figures/hamiltonian_tomography_target.png)
 
 ## Citation
