@@ -72,7 +72,8 @@ data = hamiltonian_tomography_zx_data(sys, sim.unitary, control=0)
 visualize_hamiltonian_tomography(sim.time, data, sim.trigger_position_list)
 ```
 
-Results
+Visualized Pulse Sequence
+![Pulse sequence](/figures/circuit.png)
 
 
 
