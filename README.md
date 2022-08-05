@@ -44,9 +44,9 @@ sys = System()
 sys.add_qubit(idx=0, dim=3, frequency=w0, anharmonicity=a0)
 sys.add_qubit(idx=1, dim=3, frequency=w1, anharmonicity=a1)
 sys.add_coupling((0,1), coupling=g01)
-sys.add_drive(0, qubit=0, amplitude=cr01_amp, frequency=w1d)
-sys.add_drive(1, qubit=1, amplitude=ct01_amp, frequency=w1d)
-sys.add_drive(2, qubit=0, amplitude=x0_amp, frequency=w0d)
+sys.add_drive(0, qubit=0, amplitude=cr01_amp, frequency=w1d) # corresponds to Port(0)
+sys.add_drive(1, qubit=1, amplitude=ct01_amp, frequency=w1d) # corresponds to Port(1)
+sys.add_drive(2, qubit=0, amplitude=x0_amp, frequency=w0d) # corresponds to Port(2)
 
 # Two-Pulse echoed Control-X
 seq = Sequence()
