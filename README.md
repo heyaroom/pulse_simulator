@@ -76,13 +76,9 @@ Visualized Pulse Sequence
 
 ![TPCX sequence](/figures/tpcx_sequence.png)
 
-Visualized Hamiltonian Tomography (Control Qubit)
+Visualized Hamiltonian Tomography
 
-![HT control](/figures/hamiltonian_tomography_control.png)
-
-Visualized Hamiltonian Tomography (Target Qubit)
-
-![HT target](/figures/hamiltonian_tomography_target.png)
+![HT results](/figures/hamiltonian_tomography.png)
 
 ## Citation
 No obligation. Use the following as needed.
