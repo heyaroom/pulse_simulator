@@ -1,3 +1,4 @@
+import itertools
 import numpy as np
 import scipy.sparse as sp
 from .util.transform import qubitize
@@ -34,14 +35,12 @@ class Qubit:
         self.C = self.D.T.conj()
         self.X = self.C + self.D
         self.Y = 1j*(self.C - self.D)
-        # self.Z = self.I - 2*self.C@self.D
         self.Z = 2*self.C@self.D
         self.A = self.C@self.C@self.D@self.D
         
         self.Qi = qubitize(self.I)
         self.Qx = qubitize(self.X)
         self.Qy = qubitize(self.Y)
-#         self.Qz = qubitize(self.Z)
         self.Qz = qubitize(self.I) - qubitize(self.Z)
         self.Ql = self.I - self.Qi
 
@@ -161,6 +160,50 @@ class Drive:
         """
         return self.Oi
     
+class Flux:
+    """Class for flux irradiation"""
+    
+    def __init__(self, idx, qubit, amplitude):
+        """initialize the parameters of the system
+        Args:
+            idx (int) : index of the microwave drive (corresponding to the Port index in the sequence_parser)
+            qubit (int) : index of the target qubit to be irraddiated
+            amplitude (float) : qubit frequency shift
+        """
+        
+        self.idx = idx
+        self.qubit = qubit
+        self.amplitude = amplitude
+        self.frequency = 0.
+        
+        self.Or = 0.5*self.amplitude*self.qubit.Z
+        self.Oi = 0*self.qubit.I
+        
+    def __repr__(self):
+        print_str = "-"*50 + "\n"
+        print_str += f"ZFlux ({self.idx}) \n"
+        print_str += "*" + f" Target qubit   = Q{self.qubit.idx} \n"
+        print_str += "*" + f" Amplitude       = {self.amplitude} \n"
+        print_str += "-"*50
+        return print_str
+
+    def __str__(self):
+        return self.__repr__()
+    
+    def operator_real(self):
+        """return the hamiltonian corresponds to real part of the waveform
+        Returns:
+            self.Or (np.array) : hamiltonian corresponds to real part of the waveform
+        """
+        return self.Or
+    
+    def operator_imag(self):
+        """return the hamiltonian corresponds to imaginary part of the waveform
+        Returns:
+            self.Oi (np.array) : hamiltonian corresponds to imaginary part of the waveform
+        """
+        return self.Oi
+    
 class System:
     """Class for quantum systems containing coupled standard harmonic oscillators and microwave irradiation"""
     
@@ -232,6 +275,20 @@ class System:
             raise ValueError(f'Qubit {qubit} is not found.')
         self.drives[idx] = Drive(idx, self.qubits[qubit], amplitude, frequency)
 
+    def add_flux(self, idx, qubit, amplitude):
+        """add a new flux drive
+        Args:
+            idx (int) : index of the new microwave drive
+            qubit (int) : index of the qubit to be irradiated
+            amplitude (float) : qubit frequency shift
+        """
+        
+        if idx in self.drives.keys():
+            raise ValueError(f'Drive index {idx} is already used.')
+        if qubit not in self.qubits.keys():
+            raise ValueError(f'Qubit {qubit} is not found.')
+        self.drives[idx] = Flux(idx, self.qubits[qubit], amplitude)
+
     def compile(self, frame_frequency=None):
         """compute the system time-evolution
         Args:
@@ -244,6 +301,10 @@ class System:
         
         self.dims = [q.dim for q in self.qubits.values()]
         self.dim = np.prod(self.dims)
+        self.label = list(itertools.product(*[range(dim) for dim in self.dims]))
+        self.manifold = {i:[] for i in range(sum(self.dims) - len(self.dims) + 1)}
+        for i,l in enumerate(self.label):
+            self.manifold[sum(l)].append(i)
         
         self.static_hamiltonian = 0
         for idx, q in self.qubits.items():
