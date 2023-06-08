@@ -318,6 +318,7 @@ class System:
             
         self.dynamic_operators = {}
         self.dynamic_detunings = {}
+        self.dynamic_stopflags = {}
         for idx, d in self.drives.items():
             tp = TensorProduct(*self.dims)
             tp.prod(d.operator_real(), d.qubit.idx)
@@ -327,6 +328,10 @@ class System:
             operator_imag = tp.get_operator()
             self.dynamic_operators[idx] = (operator_real, operator_imag)
             self.dynamic_detunings[idx] = d.frequency - frame_frequency
+            if isinstance(d, Drive):
+                self.dynamic_stopflags[idx] = False
+            if isinstance(d, Flux):
+                self.dynamic_stopflags[idx] = True
             
         self.conv, self.frame = get_system_dressed_frame(self)
         self.comp = get_computational_basis(self)

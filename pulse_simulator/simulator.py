@@ -18,6 +18,7 @@ class Simulator:
         self.static_hamiltonian = system.static_hamiltonian_on_frame
         self.operators = system.dynamic_operators_on_frame
         self.detunings = system.dynamic_detunings
+        self.stopflags = system.dynamic_stopflags
         self.frame = system.frame_on_frame
         self.comp = system.comp
         
@@ -28,7 +29,10 @@ class Simulator:
             step (float) : time step width for simulation (ns)
         """
         for port in sequence.port_list:
-            port.if_freq = self.detunings[port.name]
+            if self.stopflags[port.name]:
+                port.if_freq = 0
+            else:
+                port.if_freq = self.detunings[port.name]
             port.DAC_STEP = step
         sequence.compile()
         
