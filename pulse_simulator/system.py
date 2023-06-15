@@ -289,7 +289,7 @@ class System:
             raise ValueError(f'Qubit {qubit} is not found.')
         self.drives[idx] = Flux(idx, self.qubits[qubit], amplitude)
 
-    def compile(self, frame_frequency=None):
+    def compile(self, frame_frequency=None, n_truncate=None):
         """compute the system time-evolution
         Args:
             frame_frequency (float) : rotation frequency of the system simulating the time evolution
@@ -342,3 +342,16 @@ class System:
         for key, val in self.dynamic_operators.items():
             self.dynamic_operators_on_frame[key] = self.conv.T.conj()@val@self.conv
         self.frame_on_frame = self.conv.T.conj()@self.frame@self.conv
+
+        if n_truncate is not None:
+            manifold = []
+            for i in range(n_truncate+1):
+                manifold += self.manifold[i]
+            self.dim = len(manifold)
+            self.label = np.array(self.label)[manifold]
+            self.static_hamiltonian_on_frame = self.static_hamiltonian_on_frame[np.ix_(manifold, manifold)]
+            new_dynamic_operators_on_frame = {}
+            for key, val in self.dynamic_operators_on_frame.items():
+                new_dynamic_operators_on_frame[key] = val[np.ix_(range(2), manifold, manifold)]
+            self.dynamic_operators_on_frame = new_dynamic_operators_on_frame
+            self.frame_on_frame = self.frame_on_frame[np.ix_(manifold, manifold)]
