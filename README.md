@@ -7,6 +7,11 @@ Users can use [sequence_parser](https://github.com/qipe-nlab/sequence_parser.git
 
 Pulse Simulator will streamline simulations by increasing the reusability of pulse sequences.
 
+## Instllation
+```python
+pip install git+https://github.com/heyaroom/pulse_simulator.git
+```
+
 ## Usage
 
 1. Import Modules
